@@ -54,9 +54,12 @@
             background-color: #f9f9f9;
             border-radius: 5px;
             word-wrap: break-word;
+            overflow-y: auto;
+            max-height: 400px;
         }
         #videoOutput {
             text-align: center;
+            max-height: none;
         }
         #videoOutput video {
             max-width: 100%;
@@ -122,8 +125,8 @@
     <h1>Puter.js Chat & Video Generator</h1>
     
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('chat')"> Chat</button>
-        <button class="tab-btn" onclick="switchTab('video')"> Generate Video</button>
+        <button class="tab-btn active" onclick="switchTab('chat')">💬 Chat</button>
+        <button class="tab-btn" onclick="switchTab('video')">🎬 Generate Video</button>
     </div>
 
     <!-- Chat Tab -->
@@ -157,7 +160,7 @@
         </div>
         
         <div class="video-info">
-            <strong>ℹ️ Note:</strong> Video generation using Google/Veo-3.1-lite may take a minute or more. Please be patient!
+            <strong>ℹ️ Note:</strong> Video generation using Google/Veo-3.1 may take a minute or more. Please be patient!
         </div>
     </div>
 
@@ -222,21 +225,30 @@
             videoOutputDiv.innerHTML = `<span class="loading">🎬 Generating video for: "${prompt}"<br><br>This may take a minute or more...</span>`;
             
             try {
-                const response = await puter.ai.generateVideo(prompt, {
-                    model: 'google/veo-3.1-lite',
+                // Use puter.ai.run() with google/veo-3.1 model
+                const response = await puter.ai.run({
+                    model: 'google/veo-3.1',
+                    prompt: prompt,
                 });
                 
-                // Check if response is a video URL or video data
-                if (response.video_url || response.url) {
-                    const videoUrl = response.video_url || response.url;
+                // Handle the response
+                if (response && response.video_url) {
                     videoOutputDiv.innerHTML = `
                         <span class="success">✅ Video generated successfully!</span>
                         <video controls>
-                            <source src="${videoUrl}" type="video/mp4">
+                            <source src="${response.video_url}" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
                     `;
-                } else if (typeof response === 'string' && response.startsWith('data:') || response.startsWith('http')) {
+                } else if (response && response.url) {
+                    videoOutputDiv.innerHTML = `
+                        <span class="success">✅ Video generated successfully!</span>
+                        <video controls>
+                            <source src="${response.url}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+                } else if (typeof response === 'string' && (response.startsWith('data:') || response.startsWith('http'))) {
                     videoOutputDiv.innerHTML = `
                         <span class="success">✅ Video generated successfully!</span>
                         <video controls>
@@ -246,12 +258,12 @@
                     `;
                 } else {
                     videoOutputDiv.innerHTML = `
-                        <span class="success">✅ Video generated successfully!</span>
+                        <span class="success">✅ Video generation request completed!</span>
                         <pre>${JSON.stringify(response, null, 2)}</pre>
                     `;
                 }
             } catch (error) {
-                videoOutputDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+                videoOutputDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span><br><br><small>Make sure Puter.js supports the video generation API or try using the chat feature to ask about video generation.</small>`;
             }
         }
     </script>
