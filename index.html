@@ -226,9 +226,19 @@
             
             try {
                 // Use puter.ai.run() with google/veo-3.1 model
-                const response = await puter.ai.run({
-                    model: 'google/veo-3.1',
-                    prompt: prompt,
+                <html>
+<body>
+    <script src="https://js.puter.com/v2/"></script>
+    <script>
+        puter.ai.txt2vid("A cat playing with a ball of yarn", {
+            model: "google/veo-3.1"
+        }).then(video => {
+            document.body.appendChild(video);
+        });
+    </script>
+</body>
+</html>
+
                 });
                 
                 // Handle the response
