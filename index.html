@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RuAI</title>
+    <title>Puter Studio AI</title>
     <!-- Marked.js for fast Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -501,7 +501,7 @@
         <header>
             <div class="brand">
                 <div class="brand-icon"></div>
-                <h1>RuAi</h1>
+                <h1>Puter Engine</h1>
             </div>
             <div class="header-actions">
                 <div class="model-pill">gpt-5.4-nano</div>
@@ -546,7 +546,7 @@
         <div class="stream-container" id="streamContainer">
             <div class="hero-onboarding" id="onboardingHero">
                 <div class="hero-title" id="greetingTitle">What can we design?</div>
-                <div class="hero-subtitle">GPT 5.4 nano packed in a UI matrix.</div>
+                <div class="hero-subtitle">Ask questions, generate concepts, or build components effortlessly using your local session node.</div>
             </div>
         </div>
 
@@ -766,21 +766,24 @@
             let accumulatedResponse = '';
 
             try {
-                // 3. Initiate Puter Stream Pipeline Loop
-                const responseStream = await puter.ai.chat_stream(prompt, { model: 'gpt-5.4-nano' });
+                // 3. Initiate Puter Chat Engine with real-time stream callbacks
+                await puter.ai.chat(prompt, { 
+                    model: 'gpt-5.4-nano',
+                    stream: true, 
+                    onChunk: (output) => {
+                        // Erase loader vector on primary data frame arrival
+                        if (activeLoader) {
+                            activeLoader.remove();
+                        }
 
-                for await (const token of responseStream) {
-                    // Erase loader vector on primary data frame arrival
-                    if (activeLoader) {
-                        activeLoader.remove();
+                        // Accumulate and parse tokens via marked
+                        accumulatedResponse += output.text;
+                        streamingTarget.innerHTML = marked.parse(accumulatedResponse);
+
+                        // Track lower bounding container floor continuously
+                        container.scrollTop = container.scrollHeight;
                     }
-
-                    accumulatedResponse += token;
-                    streamingTarget.innerHTML = marked.parse(accumulatedResponse);
-
-                    // Track lower bounding container floor continuously
-                    container.scrollTop = container.scrollHeight;
-                }
+                });
 
             } catch (error) {
                 if (activeLoader) activeLoader.remove();
@@ -795,18 +798,27 @@
         function copySnippet(button, text) {
             navigator.clipboard.writeText(text).then(() => {
                 const textSpan = button.querySelector('span');
-                const nativeSvg = button.innerHTML;
-                button.innerHTML = `
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <span style="color: #22c55e; font-weight: 600;">Copied!</span>`;
+                const originalText = textSpan.innerText;
+                
+                textSpan.innerText = 'Copied!';
+                button.style.pointerEvents = 'none';
+                
                 setTimeout(() => {
-                    button.innerHTML = nativeSvg;
+                    textSpan.innerText = originalText;
+                    button.style.pointerEvents = 'auto';
                 }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
             });
         }
 
         function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[m]));
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
     </script>
 </body>
