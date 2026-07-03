@@ -160,11 +160,6 @@
         }
 
         /* Unified Input Panel */
-        .input-wrapper {
-            padding: 0 24px 24px 24px;
-            background-color: var(--bg-primary);
-        }
-
         .input-bar {
             display: flex;
             align-items: flex-end;
@@ -235,6 +230,7 @@
         .error-message {
             color: #ff6b6b;
             font-size: 14px;
+            text-align: center;
         }
 
         @keyframes pulse {
@@ -272,7 +268,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
             </div>
-            <div class="info-footer">Powered by Puter.js • Model: GPT-5.4-Nano</div>
+            <div class="info-footer">Powered by Puter.js • Model: gpt-5.4-nano</div>
         </div>
 
         <!-- Video Generation View -->
@@ -293,10 +289,11 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                 </button>
             </div>
-            <div class="info-footer">Uses google/veo-3.1 • Processing may take over a minute</div>
+            <div class="info-footer">Uses google/veo-3.0-fast • Subsidized Fast-Variant Mode</div>
         </div>
     </div>
 
+    <!-- Script loading for browser runtime using standard distribution CDN -->
     <script src="https://js.puter.com/v2/"></script>
     <script>
         // Adjust textarea height organically based on user text length
@@ -332,18 +329,15 @@
             const statusMessage = document.getElementById('chatStatus');
             if (statusMessage) statusMessage.remove();
 
-            // Append User Prompt Bubble
             const userBubble = document.createElement('div');
             userBubble.className = 'bubble user';
             userBubble.textContent = prompt;
             feed.appendChild(userBubble);
 
-            // Clean & reset UI Textareas
             inputField.value = '';
             inputField.style.height = "24px";
             feed.scrollTop = feed.scrollHeight;
 
-            // Generate AI UI Placeholder loading elements
             const aiBubble = document.createElement('div');
             aiBubble.className = 'bubble ai';
             aiBubble.innerHTML = '<span class="loading-dots">Thinking...</span>';
@@ -360,7 +354,7 @@
         }
 
         // Prompt Execution Context: Video Generation Pipeline
-        async function generateVideo() {
+        function generateVideo() {
             const promptField = document.getElementById('videoPrompt');
             const prompt = promptField.value.trim();
             if (!prompt) return;
@@ -368,33 +362,30 @@
             const outputContainer = document.getElementById('videoOutput');
             const runButton = document.getElementById('videoSendBtn');
 
-            // Lock structural interactions during compute phase
             runButton.disabled = true;
             promptField.value = '';
             promptField.style.height = "24px";
-            outputContainer.innerHTML = `<span class="loading-dots" style="color: var(--text-muted)">Generating video output files for: "${prompt}"...</span>`;
+            outputContainer.innerHTML = `<span class="loading-dots" style="color: var(--text-muted)">Running video compilation for: "${prompt}"...</span>`;
 
-            try {
-                // Fixed syntax structure running Puter txt2vid module
-                const videoElement = await puter.ai.txt2vid(prompt, { model: "google/veo-3.1" });
-                
-                outputContainer.innerHTML = ''; 
-                if (videoElement && (videoElement.tagName === 'VIDEO' || videoElement.src)) {
-                    videoElement.controls = true;
-                    outputContainer.appendChild(videoElement);
-                } else if (videoElement && typeof videoElement === 'string') {
-                    const video = document.createElement('video');
-                    video.src = videoElement;
+            // EXACT conversion of your requested video execution structure using standard browser object binding
+            puter.ai.txt2vid(prompt, {
+                model: "google/veo-3.0-fast"
+            }).then(video => {
+                outputContainer.innerHTML = '';
+                if (video) {
                     video.controls = true;
+                    video.style.maxWidth = "100%";
+                    video.style.maxHeight = "450px";
+                    video.style.borderRadius = "8px";
                     outputContainer.appendChild(video);
                 } else {
-                    outputContainer.innerHTML = `<span class="error-message">Unexpected payload format returned by engine.</span>`;
+                    outputContainer.innerHTML = `<span class="error-message">Empty output response returned from generation server.</span>`;
                 }
-            } catch (error) {
+            }).catch(error => {
                 outputContainer.innerHTML = `<span class="error-message">Generation Error: ${error.message}</span>`;
-            } finally {
+            }).finally(() => {
                 runButton.disabled = false;
-            }
+            });
         }
     </script>
 </body>
