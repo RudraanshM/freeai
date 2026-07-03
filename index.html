@@ -3,17 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puter.js AI Hub</title>
+    <title>Puter Studio AI</title>
+    <!-- Marked.js for fast Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
-            --bg-primary: #131314;
-            --bg-secondary: #1e1e20;
-            --bg-input: #2b2c2f;
-            --text-main: #e3e3e3;
-            --text-muted: #9e9e9e;
-            --accent-blue: #2f80ed;
-            --accent-hover: #1b66ca;
-            --border-color: #3c3d3f;
+            --bg-app: #060709;
+            --bg-surface: rgba(20, 21, 28, 0.75);
+            --bg-input: rgba(11, 12, 16, 0.7);
+            --bg-bubble-user: rgba(35, 38, 50, 0.85);
+            --text-main: #f3f4f6;
+            --text-muted: #8e96a5;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            
+            /* Dynamic Glow Matrices */
+            --dynamic-glow-bg: linear-gradient(90deg, #ff007f, #7f00ff, #00f0ff, #00ff7f, #fff000, #ff007f);
+            --dynamic-glow-size: 400% 400%;
+            --dynamic-glow-anim: rgbShift 3s linear infinite;
         }
 
         * {
@@ -23,156 +31,399 @@
         }
 
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg-primary);
+            font-family: var(--font-stack);
+            background-color: var(--bg-app);
+            background-image: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.1) 0%, transparent 60%),
+                              radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.06) 0%, transparent 40%);
             color: var(--text-main);
             display: flex;
-            flex-direction: column;
             height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Top Navigation Header */
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* SVG Liquid Goo Layer Hook */
+        .liquid-goo-container {
+            filter: url('#gooey-fluid-matrix');
+        }
+
+        /* Glassmorphic Header Dropdown */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 24px;
-            background-color: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            background: rgba(11, 12, 16, 0.4);
+            backdrop-filter: blur(24px) saturate(190%);
+            -webkit-backdrop-filter: blur(24px) saturate(190%);
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            right: 16px;
+            border-radius: 24px;
+            border: 1px solid var(--border-subtle);
+            z-index: 10;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+            animation: pulseGlow 3s ease-in-out infinite;
         }
 
         h1 {
-            font-size: 1.25rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            letter-spacing: -0.5px;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 8px;
-            background-color: var(--bg-primary);
-            padding: 4px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .tab-btn {
-            padding: 8px 16px;
-            background: none;
-            color: var(--text-muted);
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .tab-btn.active {
-            background-color: var(--bg-input);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
             color: var(--text-main);
+            opacity: 0.9;
         }
 
-        /* Viewport Container */
-        .main-container {
-            flex: 1;
+        .header-actions {
             display: flex;
-            flex-direction: column;
-            max-width: 850px;
-            width: 100%;
-            margin: 0 auto;
-            position: relative;
-            overflow: hidden;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            padding: 4px;
+            border-radius: 30px;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .tab-content {
+        .header-actions:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: scale(1.02);
+        }
+
+        .model-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        .settings-trigger {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.5);
+        }
+
+        .settings-trigger:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+        }
+        
+        .settings-trigger:active { transform: scale(0.85) rotate(15deg); }
+
+        /* Liquid Dropdown Layer Menu */
+        .settings-modal {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: rgba(15, 17, 23, 0.75);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 20px;
+            width: 300px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            z-index: 100;
             display: none;
             flex-direction: column;
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
+            gap: 16px;
+            transform-origin: top right;
+            animation: liquidGrow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
         }
 
-        .tab-content.active {
+        .settings-modal.active { display: flex; }
+
+        .settings-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding-bottom: 6px;
+        }
+
+        .settings-group { display: flex; flex-direction: column; gap: 6px; }
+        .settings-group label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+        .settings-input, .glow-select {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .settings-input:focus {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .color-picker-row {
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .picker-box {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-input);
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
         }
 
-        /* Chat UI Elements */
-        .message-feed {
+        .picker-box span { font-size: 11px; color: var(--text-muted); }
+        .native-picker { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; background: none; border: none; cursor: pointer; }
+        .native-picker::-webkit-color-swatch { border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* Fluid Stream Frame */
+        .stream-container {
             flex: 1;
             overflow-y: auto;
-            margin-bottom: 20px;
+            padding: 110px 24px 110px 24px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 28px;
+            scroll-behavior: smooth;
         }
 
-        .system-status {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 14px;
-            margin: auto 0;
-        }
+        .stream-container::-webkit-scrollbar { width: 4px; }
+        .stream-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 10px; }
 
-        .bubble {
-            max-width: 85%;
-            padding: 14px 18px;
-            border-radius: 18px;
-            line-height: 1.5;
-            font-size: 15px;
-            word-wrap: break-word;
-        }
-
-        .bubble.user {
-            background-color: var(--bg-input);
-            color: var(--text-main);
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .bubble.ai {
-            background-color: transparent;
-            color: var(--text-main);
-            align-self: flex-start;
-            padding-left: 0;
-        }
-
-        /* Video Area Elements */
-        .video-display-area {
-            flex: 1;
+        /* Jelly Onboarding Layout */
+        .hero-onboarding {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border: 2px dashed var(--border-color);
-            border-radius: 12px;
-            margin-bottom: 20px;
-            background-color: var(--bg-secondary);
-            padding: 20px;
-            min-height: 300px;
+            text-align: center;
+            margin: auto 0;
+            animation: liquidSlideIn 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
         }
 
-        #videoOutput video {
-            max-width: 100%;
-            max-height: 450px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #ffffff 30%, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        /* Unified Input Panel */
-        .input-bar {
+        .hero-subtitle { font-size: 15px; color: var(--text-muted); max-width: 440px; line-height: 1.6; }
+
+        /* Conversational Grid Blocks */
+        .row {
+            display: flex;
+            width: 100%;
+            transform: translateY(24px) scale(0.95);
+            opacity: 0;
+            animation: bubblePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
+        }
+
+        .row.user-row { justify-content: flex-end; }
+        .row.ai-row { justify-content: flex-start; }
+
+        .bubble {
+            max-width: 80%;
+            padding: 16px 22px;
+            font-size: 15px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            border-radius: 24px;
+        }
+
+        .row.user-row .bubble {
+            background-color: var(--bg-bubble-user);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 26px 26px 6px 26px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .row.ai-row .bubble {
+            background-color: transparent;
+            color: var(--text-main);
+            padding-left: 4px;
+            width: 100%;
+        }
+
+        /* --- ADVANCED MARKDOWN RENDERING LAYOUT MATRIX --- */
+        .bubble p { margin-bottom: 12px; }
+        .bubble p:last-child { margin-bottom: 0; }
+        .bubble code {
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 85%;
+            color: #f43f5e;
+        }
+        
+        /* Render Premium Code Sandbox Blocks */
+        .code-block-wrapper {
+            background: #0d0e12;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            margin: 16px 0;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .code-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .code-block-header .lang {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+
+        .code-block-wrapper pre {
+            padding: 16px;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        .code-block-wrapper pre code {
+            background: none;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 14px;
+            line-height: 1.5;
+            display: block;
+        }
+
+        /* Phone Glass Dock Console Curtain */
+        .console-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 16px 24px 16px;
+            background: linear-gradient(to top, rgba(6, 7, 9, 0.96) 50%, rgba(6, 7, 9, 0.6) 80%, transparent 100%);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            z-index: 5;
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .console-bar {
+            position: relative;
+            background-color: var(--bg-surface);
+            border-radius: 28px;
+            padding: 1px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15), box-shadow 0.3s;
+        }
+
+        .console-bar:focus-within {
+            transform: scale(1.01) translateY(-2px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Fluid Ring Glow Overlay */
+        .console-bar::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 28px;
+            padding: 1.5px; 
+            background: var(--dynamic-glow-bg);
+            background-size: var(--dynamic-glow-size);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .console-bar.rgb-glowing::before {
+            opacity: 1;
+            transition: opacity 0.15s ease;
+            animation: var(--dynamic-glow-anim);
+        }
+
+        .inner-bar {
             display: flex;
             align-items: flex-end;
-            gap: 10px;
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 10px 14px;
-            transition: border-color 0.2s;
-        }
-
-        .input-bar:focus-within {
-            border-color: var(--accent-blue);
+            gap: 12px;
+            background-color: rgba(20, 21, 28, 0.9);
+            border-radius: 27px;
+            padding: 12px 16px;
+            width: 100%;
         }
 
         textarea {
@@ -183,209 +434,379 @@
             color: var(--text-main);
             font-family: inherit;
             font-size: 15px;
+            line-height: 1.5;
             resize: none;
-            max-height: 160px;
+            max-height: 140px;
             height: 24px;
-            padding: 2px 0;
+            padding: 2px 4px;
+            transition: height 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);
         }
 
-        button.action-btn {
-            background-color: var(--accent-blue);
-            color: white;
+        textarea::placeholder { color: rgba(255, 255, 255, 0.25); }
+
+        /* Liquid Spring Button Trigger */
+        .send-btn {
+            background: var(--text-main);
+            color: var(--bg-app);
             border: none;
-            border-radius: 10px;
+            border-radius: 50%;
             width: 36px;
             height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.3);
             flex-shrink: 0;
         }
 
-        button.action-btn:hover {
-            background-color: var(--accent-hover);
-        }
+        .send-btn:hover { transform: scale(1.08); background: #ffffff; }
+        .send-btn:active { transform: scale(0.88); }
+        .send-btn:disabled { background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.15); cursor: not-allowed; transform: none; }
+        .send-btn svg { width: 14px; height: 14px; }
 
-        button.action-btn:disabled {
-            background-color: var(--border-color);
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
+        /* Dynamic Morph Loading Matrix */
+        .thinking-indicator { display: flex; gap: 4px; align-items: center; padding: 12px 8px; }
+        .dot { width: 10px; height: 10px; background-color: #3b82f6; border-radius: 50%; animation: liquidBounce 1.2s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; background-color: #8b5cf6; }
+        .dot:nth-child(3) { background-color: #ec4899; }
 
-        .info-footer {
-            font-size: 12px;
-            color: var(--text-muted);
-            text-align: center;
-            margin-top: 10px;
-        }
+        .error-state { color: #ef4444; font-size: 14px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); padding: 14px 18px; border-radius: 16px; }
 
-        /* Utilities */
-        .loading-dots {
-            display: inline-block;
-            animation: pulse 1.5s infinite;
-        }
-
-        .error-message {
-            color: #ff6b6b;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: .4; }
-            50% { opacity: 1; }
-        }
+        /* Physics Vectors */
+        @keyframes rgbShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes bronzeLiquid { 0% { background-position: 0% 50%; } 50% { background-position: 100% 100%; } 100% { background-position: 0% 50%; } }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); opacity: 0.9; } 50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.7); opacity: 1; } }
+        @keyframes liquidBounce { 0%, 80%, 100% { transform: scale(0.6) translateY(0); } 40% { transform: scale(1.4) translateY(-6px); } }
+        @keyframes liquidGrow { from { opacity: 0; transform: scale(0.85) translateY(-10px); filter: blur(6px); } to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } }
+        @keyframes liquidSlideIn { from { opacity: 0; transform: translateY(30px) scale(0.95); filter: blur(5px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+        @keyframes bubblePop { to { opacity: 1; transform: translateY(0) scale(1); } }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Puter AI Engine</h1>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab(event, 'chat-tab')">Chat</button>
-            <button class="tab-btn" onclick="switchTab(event, 'video-tab')">Video</button>
-        </div>
-    </header>
+    <!-- SVG High-End Filter Engine Layer Injector -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <defs>
+            <filter id="gooey-fluid-matrix">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+                <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+            </filter>
+        </defs>
+    </svg>
 
-    <div class="main-container">
-        <!-- Chat View -->
-        <div id="chat-tab" class="tab-content active">
-            <div class="message-feed" id="chatFeed">
-                <div class="system-status" id="chatStatus">How can I assist you today?</div>
+    <div class="workspace">
+        <header>
+            <div class="brand">
+                <div class="brand-icon"></div>
+                <h1>Puter Engine</h1>
             </div>
-            
-            <div class="input-bar">
-                <textarea 
-                    id="chatInput" 
-                    placeholder="Message Puter AI..." 
-                    rows="1"
-                    oninput="autoGrow(this)"
-                    onkeydown="checkSubmit(event, sendMessage)"
-                ></textarea>
-                <button class="action-btn" id="chatSendBtn" onclick="sendMessage()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            <div class="header-actions">
+                <div class="model-pill">gpt-5.4-nano</div>
+                <button class="settings-trigger" id="settingsBtn" onclick="toggleSettings(event)" title="Settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </button>
+
+                <!-- Settings Frame Dropdown -->
+                <div class="settings-modal" id="settingsModal">
+                    <div class="settings-title">User Account</div>
+                    <div class="settings-group">
+                        <label>Your Name</label>
+                        <input type="text" id="usernameInput" class="settings-input" placeholder="Enter your name..." oninput="updateUsername(this.value)">
+                    </div>
+                    
+                    <div class="settings-title">Interface Style</div>
+                    <div class="settings-group">
+                        <label>Typing Border Glow</label>
+                        <select id="glowStyleSelect" class="glow-select" onchange="changeGlowStyle(this.value)">
+                            <option value="rgb">RGB Rainbow</option>
+                            <option value="bronze">Bronze Shine</option>
+                            <option value="color">Custom Color</option>
+                            <option value="gradient">Custom Gradient</option>
+                        </select>
+                    </div>
+
+                    <!-- Hidden Dynamic Color Pickers Frame -->
+                    <div class="color-picker-row" id="pickerRow">
+                        <div class="picker-box">
+                            <span>Color 1</span>
+                            <input type="color" id="colorPicker1" class="native-picker" value="#3b82f6" oninput="applyCustomColors()">
+                        </div>
+                        <div class="picker-box" id="pickerBox2">
+                            <span>Color 2</span>
+                            <input type="color" id="colorPicker2" class="native-picker" value="#8b5cf6" oninput="applyCustomColors()">
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="info-footer">Powered by Puter.js • Model: gpt-5.4-nano</div>
+        </header>
+
+        <div class="stream-container" id="streamContainer">
+            <div class="hero-onboarding" id="onboardingHero">
+                <div class="hero-title" id="greetingTitle">What can we design?</div>
+                <div class="hero-subtitle">Ask questions, generate concepts, or build components effortlessly using your local session node.</div>
+            </div>
         </div>
 
-        <!-- Video Generation View -->
-        <div id="video-tab" class="tab-content">
-            <div class="video-display-area" id="videoOutput">
-                <span style="color: var(--text-muted); text-align: center;">Describe a landscape or action below to render video generation.</span>
+        <!-- Phone Blurs Dock Curtain Frame -->
+        <div class="console-container">
+            <div class="console-bar" id="consoleBar">
+                <div class="inner-bar">
+                    <textarea 
+                        id="systemInput" 
+                        placeholder="Message Puter..." 
+                        rows="1"
+                        oninput="adjustHeightAndGlow(this)"
+                        onkeydown="listenForSubmit(event)"
+                    ></textarea>
+                    <button class="send-btn" id="submitBtn" onclick="executePrompt()" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                    </button>
+                </div>
             </div>
-            
-            <div class="input-bar">
-                <textarea 
-                    id="videoPrompt" 
-                    placeholder="Describe the video you want to generate..." 
-                    rows="1"
-                    oninput="autoGrow(this)"
-                    onkeydown="checkSubmit(event, generateVideo)"
-                ></textarea>
-                <button class="action-btn" id="videoSendBtn" onclick="generateVideo()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                </button>
-            </div>
-            <div class="info-footer">Uses google/veo-3.0-fast • Subsidized Fast-Variant Mode</div>
         </div>
     </div>
 
-    <!-- Script loading for browser runtime using standard distribution CDN -->
     <script src="https://js.puter.com/v2/"></script>
     <script>
-        // Adjust textarea height organically based on user text length
-        function autoGrow(element) {
+        const inputConsole = document.getElementById('systemInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const container = document.getElementById('streamContainer');
+        const hero = document.getElementById('onboardingHero');
+        const consoleBar = document.getElementById('consoleBar');
+        const settingsModal = document.getElementById('settingsModal');
+        const usernameInput = document.getElementById('usernameInput');
+        const greetingTitle = document.getElementById('greetingTitle');
+        
+        const glowStyleSelect = document.getElementById('glowStyleSelect');
+        const pickerRow = document.getElementById('pickerRow');
+        const pickerBox2 = document.getElementById('pickerBox2');
+        const colorPicker1 = document.getElementById('colorPicker1');
+        const colorPicker2 = document.getElementById('colorPicker2');
+
+        let typingTimer;
+        const typingDelay = 600; 
+
+        // Configure Markdown Renderer Custom Sandboxes
+        const renderer = new marked.Renderer();
+        renderer.code = function(code, infostring) {
+            const lang = infostring || 'text';
+            const escapedCode = code.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            return `
+                <div class="code-block-wrapper">
+                    <div class="code-block-header">
+                        <span class="lang">${lang}</span>
+                        <button class="copy-btn" onclick="copySnippet(this, \`${escapedCode}\`)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                    <pre><code class="language-${lang}">${escapeHTML(code)}</code></pre>
+                </div>`;
+        };
+        marked.setOptions({ renderer: renderer });
+
+        initConfigurations();
+
+        function initConfigurations() {
+            const savedName = localStorage.getItem('puter_user_name') || '';
+            usernameInput.value = savedName;
+            renderGreetingText(savedName);
+
+            const savedGlow = localStorage.getItem('puter_glow_style') || 'rgb';
+            glowStyleSelect.value = savedGlow;
+            
+            colorPicker1.value = localStorage.getItem('puter_glow_c1') || '#3b82f6';
+            colorPicker2.value = localStorage.getItem('puter_glow_c2') || '#8b5cf6';
+            
+            changeGlowStyle(savedGlow, false);
+        }
+
+        function renderGreetingText(name) {
+            if (!greetingTitle) return;
+            if (!name.trim()) { greetingTitle.innerText = "What can we design?"; return; }
+
+            const hour = new Date().getHours();
+            let timeGreeting = "Good morning";
+
+            if (hour >= 12 && hour < 17) timeGreeting = "Good afternoon";
+            else if (hour >= 17 && hour < 21) timeGreeting = "Good evening";
+            else if (hour >= 21 || hour < 5) timeGreeting = "Good night";
+
+            greetingTitle.innerText = `${timeGreeting}, ${name}.`;
+        }
+
+        function updateUsername(value) {
+            localStorage.setItem('puter_user_name', value);
+            renderGreetingText(value);
+        }
+
+        function changeGlowStyle(style, userDriven = true) {
+            if(userDriven) localStorage.setItem('puter_glow_style', style);
+            
+            pickerRow.style.display = "none";
+            pickerBox2.style.display = "flex";
+
+            if (style === 'rgb') {
+                document.documentElement.style.setProperty('--dynamic-glow-bg', 'linear-gradient(90deg, #ff007f, #7f00ff, #00f0ff, #00ff7f, #fff000, #ff007f)');
+                document.documentElement.style.setProperty('--dynamic-glow-size', '400% 400%');
+                document.documentElement.style.setProperty('--dynamic-glow-anim', 'rgbShift 3s linear infinite');
+            } 
+            else if (style === 'bronze') {
+                document.documentElement.style.setProperty('--dynamic-glow-bg', 'linear-gradient(135deg, #a17a4c 0%, #ecd0a4 25%, #845a33 50%, #f9e7cd 75%, #a17a4c 100%)');
+                document.documentElement.style.setProperty('--dynamic-glow-size', '300% 300%');
+                document.documentElement.style.setProperty('--dynamic-glow-anim', 'bronzeLiquid 2.5s ease infinite');
+            } 
+            else if (style === 'color') {
+                pickerRow.style.display = "grid";
+                pickerBox2.style.display = "none";
+                applyCustomColors();
+            } 
+            else if (style === 'gradient') {
+                pickerRow.style.display = "grid";
+                applyCustomColors();
+            }
+        }
+
+        function applyCustomColors() {
+            const c1 = colorPicker1.value;
+            const c2 = colorPicker2.value;
+            const currentStyle = glowStyleSelect.value;
+
+            localStorage.setItem('puter_glow_c1', c1);
+            localStorage.setItem('puter_glow_c2', c2);
+
+            if (currentStyle === 'color') {
+                document.documentElement.style.setProperty('--dynamic-glow-bg', c1);
+                document.documentElement.style.setProperty('--dynamic-glow-size', '100% 100%');
+                document.documentElement.style.setProperty('--dynamic-glow-anim', 'none');
+            } else if (currentStyle === 'gradient') {
+                document.documentElement.style.setProperty('--dynamic-glow-bg', `linear-gradient(90deg, ${c1}, ${c2})`);
+                document.documentElement.style.setProperty('--dynamic-glow-size', '100% 100%');
+                document.documentElement.style.setProperty('--dynamic-glow-anim', 'none');
+            }
+        }
+
+        function toggleSettings(e) {
+            e.stopPropagation();
+            settingsModal.classList.toggle('active');
+        }
+
+        window.addEventListener('click', function() {
+            settingsModal.classList.remove('active');
+        });
+
+        settingsModal.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        function adjustHeightAndGlow(element) {
             element.style.height = "24px";
             element.style.height = (element.scrollHeight - 6) + "px";
+            submitBtn.disabled = !element.value.trim();
+
+            if (element.value.trim().length > 0) {
+                consoleBar.classList.add('rgb-glowing');
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    consoleBar.classList.remove('rgb-glowing');
+                }, typingDelay);
+            } else {
+                consoleBar.classList.remove('rgb-glowing');
+            }
         }
 
-        // Detect enter key for submission (Shift+Enter makes a new line)
-        function checkSubmit(event, actionFunction) {
+        function listenForSubmit(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                actionFunction();
+                executePrompt();
             }
         }
 
-        // Tab views structural controller
-        function switchTab(event, tabId) {
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        // Prompt Execution Context: Chat
-        async function sendMessage() {
-            const inputField = document.getElementById('chatInput');
-            const prompt = inputField.value.trim();
+        async function executePrompt() {
+            const prompt = inputConsole.value.trim();
             if (!prompt) return;
 
-            const feed = document.getElementById('chatFeed');
-            const statusMessage = document.getElementById('chatStatus');
-            if (statusMessage) statusMessage.remove();
+            clearTimeout(typingTimer);
+            consoleBar.classList.remove('rgb-glowing');
 
-            const userBubble = document.createElement('div');
-            userBubble.className = 'bubble user';
-            userBubble.textContent = prompt;
-            feed.appendChild(userBubble);
+            if (hero) hero.remove();
 
-            inputField.value = '';
-            inputField.style.height = "24px";
-            feed.scrollTop = feed.scrollHeight;
+            // 1. Render User Message Bubble
+            const userRow = document.createElement('div');
+            userRow.className = 'row user-row';
+            userRow.innerHTML = `<div class="bubble">${escapeHTML(prompt)}</div>`;
+            container.appendChild(userRow);
 
-            const aiBubble = document.createElement('div');
-            aiBubble.className = 'bubble ai';
-            aiBubble.innerHTML = '<span class="loading-dots">Thinking...</span>';
-            feed.appendChild(aiBubble);
-            feed.scrollTop = feed.scrollHeight;
+            // Clean Input Matrix
+            inputConsole.value = '';
+            inputConsole.style.height = "24px";
+            submitBtn.disabled = true;
+            container.scrollTop = container.scrollHeight;
+
+            // 2. Setup AI Container with Animated Vector Loader
+            const aiRow = document.createElement('div');
+            aiRow.className = 'row ai-row';
+            aiRow.innerHTML = `
+                <div class="bubble">
+                    <div class="thinking-indicator liquid-goo-container" id="activeLoader">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <div class="markdown-body" id="streamingTarget"></div>
+                </div>`;
+            container.appendChild(aiRow);
+            container.scrollTop = container.scrollHeight;
+
+            const streamingTarget = aiRow.querySelector('#streamingTarget');
+            const activeLoader = aiRow.querySelector('#activeLoader');
+            let accumulatedResponse = '';
 
             try {
-                const response = await puter.ai.chat(prompt, { model: 'gpt-5.4-nano' });
-                aiBubble.innerHTML = response;
+                // 3. Initiate Puter Stream Pipeline Loop
+                const responseStream = await puter.ai.chat_stream(prompt, { model: 'gpt-5.4-nano' });
+
+                for await (const token of responseStream) {
+                    // Erase loader vector on primary data frame arrival
+                    if (activeLoader) {
+                        activeLoader.remove();
+                    }
+
+                    accumulatedResponse += token;
+                    streamingTarget.innerHTML = marked.parse(accumulatedResponse);
+
+                    // Track lower bounding container floor continuously
+                    container.scrollTop = container.scrollHeight;
+                }
+
             } catch (error) {
-                aiBubble.innerHTML = `<span class="error-message">Error processing chat stream: ${error.message}</span>`;
+                if (activeLoader) activeLoader.remove();
+                streamingTarget.innerHTML = `
+                    <div class="error-state">
+                        <strong>Pipeline Error:</strong> ${error.message}
+                    </div>`;
             }
-            feed.scrollTop = feed.scrollHeight;
+            container.scrollTop = container.scrollHeight;
         }
 
-        // Prompt Execution Context: Video Generation Pipeline
-        function generateVideo() {
-            const promptField = document.getElementById('videoPrompt');
-            const prompt = promptField.value.trim();
-            if (!prompt) return;
-
-            const outputContainer = document.getElementById('videoOutput');
-            const runButton = document.getElementById('videoSendBtn');
-
-            runButton.disabled = true;
-            promptField.value = '';
-            promptField.style.height = "24px";
-            outputContainer.innerHTML = `<span class="loading-dots" style="color: var(--text-muted)">Running video compilation for: "${prompt}"...</span>`;
-
-            // EXACT conversion of your requested video execution structure using standard browser object binding
-            puter.ai.txt2vid(prompt, {
-                model: "google/veo-3.0-fast"
-            }).then(video => {
-                outputContainer.innerHTML = '';
-                if (video) {
-                    video.controls = true;
-                    video.style.maxWidth = "100%";
-                    video.style.maxHeight = "450px";
-                    video.style.borderRadius = "8px";
-                    outputContainer.appendChild(video);
-                } else {
-                    outputContainer.innerHTML = `<span class="error-message">Empty output response returned from generation server.</span>`;
-                }
-            }).catch(error => {
-                outputContainer.innerHTML = `<span class="error-message">Generation Error: ${error.message}</span>`;
-            }).finally(() => {
-                runButton.disabled = false;
+        function copySnippet(button, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const textSpan = button.querySelector('span');
+                const nativeSvg = button.innerHTML;
+                button.innerHTML = `
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span style="color: #22c55e; font-weight: 600;">Copied!</span>`;
+                setTimeout(() => {
+                    button.innerHTML = nativeSvg;
+                }, 2000);
             });
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[m]));
         }
     </script>
 </body>
