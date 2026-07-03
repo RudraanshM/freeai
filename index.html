@@ -1,279 +1,399 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Puter.js Chat & Video Generator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puter.js AI Hub</title>
     <style>
+        :root {
+            --bg-primary: #131314;
+            --bg-secondary: #1e1e20;
+            --bg-input: #2b2c2f;
+            --text-main: #e3e3e3;
+            --text-muted: #9e9e9e;
+            --accent-blue: #2f80ed;
+            --accent-hover: #1b66ca;
+            --border-color: #3c3d3f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body { 
-            font-family: Arial, sans-serif; 
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
+
+        /* Top Navigation Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 24px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
         h1 {
-            color: #333;
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
+
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
+            gap: 8px;
+            background-color: var(--bg-primary);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
+
         .tab-btn {
-            padding: 12px 24px;
-            background-color: #e9ecef;
+            padding: 8px 16px;
+            background: none;
+            color: var(--text-muted);
             border: none;
-            border-radius: 5px 5px 0 0;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
+
         .tab-btn.active {
-            background-color: #007bff;
-            color: white;
+            background-color: var(--bg-input);
+            color: var(--text-main);
         }
-        .tab-btn:hover {
-            background-color: #0056b3;
-            color: white;
+
+        /* Viewport Container */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 850px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
         }
+
         .tab-content {
             display: none;
-            padding: 20px;
-            background-color: white;
-            border-radius: 0 5px 5px 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .tab-content.active {
-            display: block;
-        }
-        #output, #videoOutput { 
-            margin-top: 20px; 
-            padding: 15px; 
-            border: 1px solid #ccc; 
-            min-height: 200px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            word-wrap: break-word;
+            flex-direction: column;
+            flex: 1;
             overflow-y: auto;
-            max-height: 400px;
+            padding: 24px;
         }
-        #videoOutput {
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Chat UI Elements */
+        .message-feed {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .system-status {
             text-align: center;
-            max-height: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: auto 0;
         }
+
+        .bubble {
+            max-width: 85%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            font-size: 15px;
+            word-wrap: break-word;
+        }
+
+        .bubble.user {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bubble.ai {
+            background-color: transparent;
+            color: var(--text-main);
+            align-self: flex-start;
+            padding-left: 0;
+        }
+
+        /* Video Area Elements */
+        .video-display-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            background-color: var(--bg-secondary);
+            padding: 20px;
+            min-height: 300px;
+        }
+
         #videoOutput video {
             max-width: 100%;
-            max-height: 500px;
-            margin-top: 15px;
-            border-radius: 5px;
+            max-height: 450px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
-        .input-container {
+
+        /* Unified Input Panel */
+        .input-wrapper {
+            padding: 0 24px 24px 24px;
+            background-color: var(--bg-primary);
+        }
+
+        .input-bar {
             display: flex;
+            align-items: flex-end;
             gap: 10px;
-            margin-top: 20px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 10px 14px;
+            transition: border-color 0.2s;
         }
-        input, textarea {
-            flex: 1;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
+
+        .input-bar:focus-within {
+            border-color: var(--accent-blue);
         }
+
         textarea {
-            resize: vertical;
-            min-height: 80px;
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 15px;
+            resize: none;
+            max-height: 160px;
+            height: 24px;
+            padding: 2px 0;
         }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
+
+        button.action-btn {
+            background-color: var(--accent-blue);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: background-color 0.3s ease;
+            transition: background 0.2s;
+            flex-shrink: 0;
         }
-        button:hover {
-            background-color: #0056b3;
+
+        button.action-btn:hover {
+            background-color: var(--accent-hover);
         }
-        button:disabled {
-            background-color: #6c757d;
+
+        button.action-btn:disabled {
+            background-color: var(--border-color);
             cursor: not-allowed;
+            opacity: 0.6;
         }
-        .loading {
-            color: #666;
-            font-style: italic;
-        }
-        .error {
-            color: red;
-        }
-        .success {
-            color: green;
-        }
-        .video-info {
-            background-color: #e7f3ff;
-            padding: 10px;
-            border-radius: 5px;
+
+        .info-footer {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
             margin-top: 10px;
+        }
+
+        /* Utilities */
+        .loading-dots {
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        .error-message {
+            color: #ff6b6b;
             font-size: 14px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: .4; }
+            50% { opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <h1>Puter.js Chat & Video Generator</h1>
-    
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('chat')">Chat</button>
-        <button class="tab-btn" onclick="switchTab('video')">Generate Video</button>
-    </div>
 
-    <!-- Chat Tab -->
-    <div id="chat" class="tab-content active">
-        <div id="output">Ready to chat...</div>
-        
-        <div class="input-container">
-            <input 
-                type="text" 
-                id="userInput" 
-                placeholder="Ask me anything..." 
-                onkeypress="handleKeyPress(event)"
-            >
-            <button onclick="sendMessage()">Send</button>
+    <header>
+        <h1>Puter AI Engine</h1>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(event, 'chat-tab')">Chat</button>
+            <button class="tab-btn" onclick="switchTab(event, 'video-tab')">Video</button>
         </div>
-    </div>
+    </header>
 
-    <!-- Video Generation Tab -->
-    <div id="video" class="tab-content">
-        <div id="videoOutput">Ready to generate video...</div>
-        
-        <div class="input-container">
-            <textarea 
-                id="videoPrompt" 
-                placeholder="Describe the video you want to generate (e.g., 'A cat dancing in the rain')..."
-            ></textarea>
+    <div class="main-container">
+        <!-- Chat View -->
+        <div id="chat-tab" class="tab-content active">
+            <div class="message-feed" id="chatFeed">
+                <div class="system-status" id="chatStatus">How can I assist you today?</div>
+            </div>
+            
+            <div class="input-bar">
+                <textarea 
+                    id="chatInput" 
+                    placeholder="Message Puter AI..." 
+                    rows="1"
+                    oninput="autoGrow(this)"
+                    onkeydown="checkSubmit(event, sendMessage)"
+                ></textarea>
+                <button class="action-btn" id="chatSendBtn" onclick="sendMessage()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+            <div class="info-footer">Powered by Puter.js • Model: GPT-5.4-Nano</div>
         </div>
-        
-        <div class="input-container">
-            <button onclick="generateVideo()" style="flex: 1;"> Generate Video</button>
-        </div>
-        
-        <div class="video-info">
-            <strong> Note:</strong> Video generation using Google/Veo-3.1 may take a minute or more. Please be patient!
+
+        <!-- Video Generation View -->
+        <div id="video-tab" class="tab-content">
+            <div class="video-display-area" id="videoOutput">
+                <span style="color: var(--text-muted); text-align: center;">Describe a landscape or action below to render video generation.</span>
+            </div>
+            
+            <div class="input-bar">
+                <textarea 
+                    id="videoPrompt" 
+                    placeholder="Describe the video you want to generate..." 
+                    rows="1"
+                    oninput="autoGrow(this)"
+                    onkeydown="checkSubmit(event, generateVideo)"
+                ></textarea>
+                <button class="action-btn" id="videoSendBtn" onclick="generateVideo()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                </button>
+            </div>
+            <div class="info-footer">Uses google/veo-3.1 • Processing may take over a minute</div>
         </div>
     </div>
 
     <script src="https://js.puter.com/v2/"></script>
     <script>
-        // Tab switching
-        function switchTab(tabName) {
-            // Hide all tab contents
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Remove active class from all tab buttons
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            tabBtns.forEach(btn => btn.classList.remove('active'));
-            
-            // Show selected tab content
-            document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked button
-            event.target.classList.add('active');
+        // Adjust textarea height organically based on user text length
+        function autoGrow(element) {
+            element.style.height = "24px";
+            element.style.height = (element.scrollHeight - 6) + "px";
         }
 
-        // Chat functionality
+        // Detect enter key for submission (Shift+Enter makes a new line)
+        function checkSubmit(event, actionFunction) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                actionFunction();
+            }
+        }
+
+        // Tab views structural controller
+        function switchTab(event, tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Prompt Execution Context: Chat
         async function sendMessage() {
-            const userInput = document.getElementById('userInput');
-            const question = userInput.value.trim();
-            
-            if (!question) return;
-            
-            const outputDiv = document.getElementById('output');
-            outputDiv.innerHTML = `<span class="loading">Loading response for: "${question}"</span>`;
-            
-            userInput.value = '';
-            
+            const inputField = document.getElementById('chatInput');
+            const prompt = inputField.value.trim();
+            if (!prompt) return;
+
+            const feed = document.getElementById('chatFeed');
+            const statusMessage = document.getElementById('chatStatus');
+            if (statusMessage) statusMessage.remove();
+
+            // Append User Prompt Bubble
+            const userBubble = document.createElement('div');
+            userBubble.className = 'bubble user';
+            userBubble.textContent = prompt;
+            feed.appendChild(userBubble);
+
+            // Clean & reset UI Textareas
+            inputField.value = '';
+            inputField.style.height = "24px";
+            feed.scrollTop = feed.scrollHeight;
+
+            // Generate AI UI Placeholder loading elements
+            const aiBubble = document.createElement('div');
+            aiBubble.className = 'bubble ai';
+            aiBubble.innerHTML = '<span class="loading-dots">Thinking...</span>';
+            feed.appendChild(aiBubble);
+            feed.scrollTop = feed.scrollHeight;
+
             try {
-                const response = await puter.ai.chat(question, {
-                    model: 'gpt-5.4-nano',
-                });
-                outputDiv.innerHTML = response;
+                const response = await puter.ai.chat(prompt, { model: 'gpt-5.4-nano' });
+                aiBubble.innerHTML = response;
             } catch (error) {
-                outputDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                aiBubble.innerHTML = `<span class="error-message">Error processing chat stream: ${error.message}</span>`;
             }
-        }
-        
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
+            feed.scrollTop = feed.scrollHeight;
         }
 
-        // Video generation functionality
+        // Prompt Execution Context: Video Generation Pipeline
         async function generateVideo() {
-            const videoPrompt = document.getElementById('videoPrompt');
-            const prompt = videoPrompt.value.trim();
-            
-            if (!prompt) {
-                alert('Please enter a video prompt');
-                return;
-            }
-            
-            const videoOutputDiv = document.getElementById('videoOutput');
-            videoOutputDiv.innerHTML = `<span class="loading"> Generating video for: "${prompt}"<br><br>This may take a minute or more....</span>`;
-            
-            try {
-                // Use puter.ai.run() with google/veo-3.1 model
-                <html>
-<body>
-    <script src="https://js.puter.com/v2/"></script>
-    <script>
-        puter.ai.txt2vid("A cat playing with a ball of yarn", {
-            model: "google/veo-3.1"
-        }).then(video => {
-            document.body.appendChild(video);
-        });
-    </script>
-</body>
-</html>
+            const promptField = document.getElementById('videoPrompt');
+            const prompt = promptField.value.trim();
+            if (!prompt) return;
 
-                });
+            const outputContainer = document.getElementById('videoOutput');
+            const runButton = document.getElementById('videoSendBtn');
+
+            // Lock structural interactions during compute phase
+            runButton.disabled = true;
+            promptField.value = '';
+            promptField.style.height = "24px";
+            outputContainer.innerHTML = `<span class="loading-dots" style="color: var(--text-muted)">Generating video output files for: "${prompt}"...</span>`;
+
+            try {
+                // Fixed syntax structure running Puter txt2vid module
+                const videoElement = await puter.ai.txt2vid(prompt, { model: "google/veo-3.1" });
                 
-                // Handle the response
-                if (response && response.video_url) {
-                    videoOutputDiv.innerHTML = `
-                        <span class="success"> Video generated successfully!</span>
-                        <video controls>
-                            <source src="${response.video_url}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    `;
-                } else if (response && response.url) {
-                    videoOutputDiv.innerHTML = `
-                        <span class="success"> Video generated successfully!</span>
-                        <video controls>
-                            <source src="${response.url}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    `;
-                } else if (typeof response === 'string' && (response.startsWith('data:') || response.startsWith('http'))) {
-                    videoOutputDiv.innerHTML = `
-                        <span class="success"> Video generated successfully!</span>
-                        <video controls>
-                            <source src="${response}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    `;
+                outputContainer.innerHTML = ''; 
+                if (videoElement && (videoElement.tagName === 'VIDEO' || videoElement.src)) {
+                    videoElement.controls = true;
+                    outputContainer.appendChild(videoElement);
+                } else if (videoElement && typeof videoElement === 'string') {
+                    const video = document.createElement('video');
+                    video.src = videoElement;
+                    video.controls = true;
+                    outputContainer.appendChild(video);
                 } else {
-                    videoOutputDiv.innerHTML = `
-                        <span class="success"> Video generation request completed!</span>
-                        <pre>${JSON.stringify(response, null, 2)}</pre>
-                    `;
+                    outputContainer.innerHTML = `<span class="error-message">Unexpected payload format returned by engine.</span>`;
                 }
             } catch (error) {
-                videoOutputDiv.innerHTML = `<span class="error"> Error: ${error.message}</span><br><br><small>Make sure Puter.js supports the video generation API or try using the chat feature to ask about video generation.</small>`;
+                outputContainer.innerHTML = `<span class="error-message">Generation Error: ${error.message}</span>`;
+            } finally {
+                runButton.disabled = false;
             }
         }
     </script>
