@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Puter Studio AI</title>
-    <!-- Marked.js for fast Markdown parsingw -->
+    <!-- Marked.js for fast Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
@@ -295,7 +295,7 @@
             width: 100%;
         }
 
-        /* --- ADVANCED MARKDOWN RENDERING LAYOUT MATRIX --- */
+        /* MARKDOWN RENDERING LAYOUT MATRIX */
         .bubble p { margin-bottom: 12px; }
         .bubble p:last-child { margin-bottom: 0; }
         .bubble code {
@@ -486,7 +486,7 @@
 </head>
 <body>
 
-    <!-- SVG High-End Filter Engine Layer Injector -->
+    <!-- SVG Filter Engine Layer -->
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
         <defs>
             <filter id="gooey-fluid-matrix">
@@ -550,7 +550,7 @@
             </div>
         </div>
 
-        <!-- Phone Blurs Dock Curtain Frame -->
+        <!-- Dock Console -->
         <div class="console-container">
             <div class="console-bar" id="consoleBar">
                 <div class="inner-bar">
@@ -589,7 +589,7 @@
         let typingTimer;
         const typingDelay = 600; 
 
-        // Configure Markdown Renderer Custom Sandboxes
+        // Configure Markdown Renderer
         const renderer = new marked.Renderer();
         renderer.code = function(code, infostring) {
             const lang = infostring || 'text';
@@ -763,27 +763,21 @@
 
             const streamingTarget = aiRow.querySelector('#streamingTarget');
             const activeLoader = aiRow.querySelector('#activeLoader');
-            let accumulatedResponse = '';
 
             try {
-                // 3. Initiate Puter Chat Engine with real-time stream callbacks
-                await puter.ai.chat(prompt, { 
-                    model: 'gpt-5.4-nano',
-                    stream: true, 
-                    onChunk: (output) => {
-                        // Erase loader vector on primary data frame arrival
-                        if (activeLoader) {
-                            activeLoader.remove();
-                        }
-
-                        // Accumulate and parse tokens via marked
-                        accumulatedResponse += output.text;
-                        streamingTarget.innerHTML = marked.parse(accumulatedResponse);
-
-                        // Track lower bounding container floor continuously
-                        container.scrollTop = container.scrollHeight;
-                    }
+                // 3. Request complete response directly (No Live Token Streaming)
+                const response = await puter.ai.chat(prompt, { 
+                    model: 'gpt-5.4-nano'
                 });
+
+                // Clear the loader
+                if (activeLoader) activeLoader.remove();
+
+                // Extract text response out of Puter response parameters
+                const aiMessageText = response.message ? response.message.content : response;
+                
+                // Parse and render all at once
+                streamingTarget.innerHTML = marked.parse(aiMessageText);
 
             } catch (error) {
                 if (activeLoader) activeLoader.remove();
