@@ -1,0 +1,2 @@
+# freeai
+Free infinite claude
