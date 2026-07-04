@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puter Studio AI</title>
+    <title>WebLLM Local Engine</title>
     <!-- Marked.js for fast Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -226,7 +226,7 @@
         .stream-container {
             flex: 1;
             overflow-y: auto;
-            padding: 110px 24px 110px 24px;
+            padding: 110px 24px 170px 24px;
             display: flex;
             flex-direction: column;
             gap: 28px;
@@ -418,11 +418,18 @@
 
         .inner-bar {
             display: flex;
-            align-items: flex-end;
-            gap: 12px;
+            flex-direction: column;
+            gap: 10px;
             background-color: rgba(20, 21, 28, 0.9);
             border-radius: 27px;
             padding: 12px 16px;
+            width: 100%;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
             width: 100%;
         }
 
@@ -443,6 +450,42 @@
         }
 
         textarea::placeholder { color: rgba(255, 255, 255, 0.25); }
+
+        /* Category Selector Tab Menu Panel */
+        .category-tabs {
+            display: flex;
+            gap: 6px;
+            padding: 2px 4px;
+            overflow-x: auto;
+            width: 100%;
+        }
+        .category-tabs::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: var(--text-main);
+            color: var(--bg-app);
+            border-color: var(--text-main);
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        }
 
         /* Liquid Spring Button Trigger */
         .send-btn {
@@ -471,6 +514,14 @@
         .dot:nth-child(1) { animation-delay: -0.32s; }
         .dot:nth-child(2) { animation-delay: -0.16s; background-color: #8b5cf6; }
         .dot:nth-child(3) { background-color: #ec4899; }
+
+        .engine-status-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            padding-left: 8px;
+            display: block;
+        }
 
         .error-state { color: #ef4444; font-size: 14px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); padding: 14px 18px; border-radius: 16px; }
 
@@ -501,10 +552,10 @@
         <header>
             <div class="brand">
                 <div class="brand-icon"></div>
-                <h1>Puter Engine</h1>
+                <h1>WebLLM Engine</h1>
             </div>
             <div class="header-actions">
-                <div class="model-pill">gpt-5.4-nano</div>
+                <div class="model-pill" id="activeModelPill">Llama-3-8B-Instruct</div>
                 <button class="settings-trigger" id="settingsBtn" onclick="toggleSettings(event)" title="Settings">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </button>
@@ -546,7 +597,7 @@
         <div class="stream-container" id="streamContainer">
             <div class="hero-onboarding" id="onboardingHero">
                 <div class="hero-title" id="greetingTitle">What can we design?</div>
-                <div class="hero-subtitle">Ask questions, generate concepts, or build components effortlessly using your local session node.</div>
+                <div class="hero-subtitle">Ask questions, generate concepts, or build components effortlessly using WebLLM local hardware models directly inside your browser sandbox.</div>
             </div>
         </div>
 
@@ -554,22 +605,36 @@
         <div class="console-container">
             <div class="console-bar" id="consoleBar">
                 <div class="inner-bar">
-                    <textarea 
-                        id="systemInput" 
-                        placeholder="Message Puter..." 
-                        rows="1"
-                        oninput="adjustHeightAndGlow(this)"
-                        onkeydown="listenForSubmit(event)"
-                    ></textarea>
-                    <button class="send-btn" id="submitBtn" onclick="executePrompt()" disabled>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-                    </button>
+                    <div class="category-tabs">
+                        <button class="tab-btn active" onclick="switchCategory('simple', this)">Simple</button>
+                        <button class="tab-btn" onclick="switchCategory('deepthink', this)">Deep Think</button>
+                        <button class="tab-btn" onclick="switchCategory('research', this)">Research</button>
+                        <button class="tab-btn" onclick="switchCategory('reasoning', this)">Reasoning</button>
+                    </div>
+                    <div class="input-row">
+                        <textarea 
+                            id="systemInput" 
+                            placeholder="Message WebLLM..." 
+                            rows="1"
+                            oninput="adjustHeightAndGlow(this)"
+                            onkeydown="listenForSubmit(event)"
+                        ></textarea>
+                        <button class="send-btn" id="submitBtn" onclick="executePrompt()" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
+            <span class="engine-status-label" id="engineStatus">WebLLM: Engine initialized. Ready to pull weights.</span>
         </div>
     </div>
 
-    <script src="https://js.puter.com/v2/"></script>
+    <!-- WebLLM Core CDN Engine Upgrade -->
+    <script type="module">
+        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+        window.webllm = webllm;
+    </script>
+
     <script>
         const inputConsole = document.getElementById('systemInput');
         const submitBtn = document.getElementById('submitBtn');
@@ -579,6 +644,8 @@
         const settingsModal = document.getElementById('settingsModal');
         const usernameInput = document.getElementById('usernameInput');
         const greetingTitle = document.getElementById('greetingTitle');
+        const engineStatus = document.getElementById('engineStatus');
+        const activeModelPill = document.getElementById('activeModelPill');
         
         const glowStyleSelect = document.getElementById('glowStyleSelect');
         const pickerRow = document.getElementById('pickerRow');
@@ -588,6 +655,19 @@
 
         let typingTimer;
         const typingDelay = 600; 
+
+        // Dynamic Categories Configuration
+        let selectedCategory = 'simple';
+        const modelMapping = {
+            'simple': { name: 'Llama-3-8B-Instruct-q4f32_1-MLC', label: 'Llama 3 Simple' },
+            'deepthink': { name: 'DeepSeek-R1-Distill-Qwen-7B-q4f16_1-MLC', label: 'DeepSeek Deep Think' },
+            'research': { name: 'Llama-3-8B-Instruct-q4f32_1-MLC', label: 'Llama 3 Research' },
+            'reasoning': { name: 'gemma-2b-it-q4f32_1-MLC', label: 'Gemma Reasoning' }
+        };
+
+        // Persistent WebLLM Cache Instances
+        let currentEngine = null;
+        let loadedModelName = "";
 
         // Configure Markdown Renderer
         const renderer = new marked.Renderer();
@@ -622,6 +702,18 @@
             colorPicker2.value = localStorage.getItem('puter_glow_c2') || '#8b5cf6';
             
             changeGlowStyle(savedGlow, false);
+            updateModelPill();
+        }
+
+        function switchCategory(category, element) {
+            selectedCategory = category;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            updateModelPill();
+        }
+
+        function updateModelPill() {
+            activeModelPill.innerText = modelMapping[selectedCategory].label;
         }
 
         function renderGreetingText(name) {
@@ -725,6 +817,27 @@
             }
         }
 
+        async function getWebLLMEngine(modelName) {
+            if (currentEngine && loadedModelName === modelName) {
+                return currentEngine;
+            }
+            
+            engineStatus.innerText = `Initializing engine configuration for ${modelName}...`;
+            
+            // Instantiating WebLLM CreateGenericMLCEngine
+            const initProgressCallback = (report) => {
+                engineStatus.innerText = report.text;
+            };
+            
+            const engine = await window.webllm.CreateGenericMLCEngine(modelName, {
+                initProgressCallback: initProgressCallback
+            });
+            
+            currentEngine = engine;
+            loadedModelName = modelName;
+            return currentEngine;
+        }
+
         async function executePrompt() {
             const prompt = inputConsole.value.trim();
             if (!prompt) return;
@@ -764,26 +877,36 @@
             const streamingTarget = aiRow.querySelector('#streamingTarget');
             const activeLoader = aiRow.querySelector('#activeLoader');
 
+            const targetModel = modelMapping[selectedCategory].name;
+
             try {
-                // 3. Request complete response directly (No Live Token Streaming)
-                const response = await puter.ai.chat(prompt, { 
-                    model: 'gpt-5.4-nano'
+                // Fetch context from the running local matrix
+                const engine = await getWebLLMEngine(targetModel);
+                
+                engineStatus.innerText = `Computing complete answer with local device shaders...`;
+
+                const messages = [
+                    { role: "user", content: prompt }
+                ];
+
+                // Direct inference compilation without continuous text token parsing
+                const reply = await engine.chat.completions.create({
+                    messages: messages
                 });
 
-                // Clear the loader
                 if (activeLoader) activeLoader.remove();
+                engineStatus.innerText = `WebLLM: Run execution finished.`;
 
-                // Extract text response out of Puter response parameters
-                const aiMessageText = response.message ? response.message.content : response;
-                
-                // Parse and render all at once
+                const aiMessageText = reply.choices[0].message.content;
                 streamingTarget.innerHTML = marked.parse(aiMessageText);
 
             } catch (error) {
                 if (activeLoader) activeLoader.remove();
+                engineStatus.innerText = `WebLLM: Execution failed.`;
                 streamingTarget.innerHTML = `
                     <div class="error-state">
-                        <strong>Pipeline Error:</strong> ${error.message}
+                        <strong>WebLLM Pipeline Error:</strong> ${error.message}<br>
+                        <small style="opacity:0.7">Note: WebLLM requires a browser supporting WebGPU framework parameters.</small>
                     </div>`;
             }
             container.scrollTop = container.scrollHeight;
